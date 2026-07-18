@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
 from app.db.session import get_db
-from app.schemas.incident import IncidentCreate
+from app.schemas.incident import IncidentCreate, IncidentStatusUpdate
 from app.services.incident_service import IncidentService
 
 
@@ -13,50 +13,76 @@ router = APIRouter(
 )
 
 
+@router.get("/")
+def get_incidents(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    return IncidentService.get_all_incidents(db)
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_incident(
     incident_data: IncidentCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    try:
-        incident = IncidentService.create_incident(
-            db=db,
-            incident_data=incident_data,
-            user_id=current_user.id,
-        )
+    return IncidentService.create_incident(
+        db=db,
+        incident_data=incident_data,
+        user_id=current_user.id,
+    )
 
-        return {
-            "id": incident.id,
-            "title": incident.title,
-            "description": incident.description,
-            "severity": incident.severity,
-            "status": incident.status,
-            "created_by": incident.created_by,
-            "created_at": incident.created_at,
-        }
 
-    except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error),
-        )
-@router.get("/")
-def get_incidents(
+@router.get("/{incident_id}")
+def get_incident_by_id(
+    incident_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    incidents = IncidentService.get_all_incidents(db)
+    incident = IncidentService.get_incident_by_id(db, incident_id)
 
-    return [
-        {
-            "id": incident.id,
-            "title": incident.title,
-            "description": incident.description,
-            "severity": incident.severity,
-            "status": incident.status,
-            "created_by": incident.created_by,
-            "created_at": incident.created_at,
-        }
-        for incident in incidents
-    ]   
+    if not incident:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found",
+        )
+
+    return incident
+
+
+@router.patch("/{incident_id}/status")
+def update_incident_status(
+    incident_id: int,
+    status_data: IncidentStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    incident = IncidentService.update_incident_status(
+        db=db,
+        incident_id=incident_id,
+        status_data=status_data,
+    )
+
+    if not incident:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found",
+        )
+
+    return incident
+
+
+@router.delete("/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_incident(
+    incident_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    deleted = IncidentService.delete_incident(db, incident_id)
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found",
+        )
