@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     APP_NAME: str = "OpsPilot"
     APP_VERSION: str = "1.0.0"
 
+    GROQ_API_KEY: str
+
     DATABASE_URL: str
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

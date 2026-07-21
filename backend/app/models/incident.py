@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -42,8 +42,18 @@ class Incident(Base):
         nullable=False,
     )
 
+    assigned_to: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
         nullable=False,
+    )
+
+    assignee = relationship(
+        "User",
+        foreign_keys=[assigned_to],
     )

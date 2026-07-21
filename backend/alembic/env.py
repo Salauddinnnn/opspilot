@@ -3,6 +3,8 @@ from app.config import settings
 from app.db.base import Base
 from app.models.incident import Incident
 from app.models.user import User
+from app.models.comment import Comment
+from app.models.audit_log import AuditLog
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool

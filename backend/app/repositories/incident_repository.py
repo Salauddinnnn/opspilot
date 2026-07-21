@@ -13,10 +13,27 @@ class IncidentRepository:
         return incident
 
     @staticmethod
-    def get_all(db: Session):
-        return db.query(Incident).order_by(
-            Incident.created_at.desc()
-        ).all()
+    def get_all(
+        db: Session,
+        status: str = None,
+        severity: str = None,
+        skip: int = 0,
+        limit: int = 10,
+    ):
+        query = db.query(Incident)
+
+        if status:
+           query = query.filter(Incident.status == status)
+
+        if severity:
+           query = query.filter(Incident.severity == severity)
+
+        return (
+            query.order_by(Incident.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def get_by_id(db: Session, incident_id: int):
@@ -42,3 +59,13 @@ class IncidentRepository:
     ):
         db.delete(incident)
         db.commit()
+    @staticmethod
+    def assign_incident(
+        db: Session,
+        incident: Incident,
+        assigned_to: int,
+    ):
+        incident.assigned_to = assigned_to
+        db.commit()
+        db.refresh(incident)
+        return incident    
