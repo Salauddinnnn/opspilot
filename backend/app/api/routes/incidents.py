@@ -83,7 +83,10 @@ def get_incident_by_id(
     return incident
 
 
-@router.patch("/{incident_id}/status")
+@router.patch(
+    "/{incident_id}/status",
+    response_model=IncidentResponse,
+)
 def update_incident_status(
     incident_id: int,
     status_data: IncidentStatusUpdate,
